@@ -45,13 +45,18 @@ const EXECUTABLES = [
   join('node_modules', 'node-pty', 'build', 'Release', 'spawn-helper'),
 ]
 
-/** Native modules rebuilt against the Electron ABI. */
-const NATIVE_MODULES = ['node-pty']
+/**
+ * Native addons the backend loads eagerly. They ship N-API prebuilds, which the
+ * Node inside Electron loads as-is, so the staged tree is checked rather than
+ * rebuilt: a blanket `electron-rebuild` would put a C++ toolchain on the
+ * critical path of every build to redo work the prebuilds already did.
+ */
+const NATIVE_MODULES = ['node-pty', 'koffi']
 
 interface Options {
   skipBuild: boolean
   skipDeploy: boolean
-  skipRebuild: boolean
+  skipNativeCheck: boolean
 }
 
 /**
@@ -65,13 +70,13 @@ function parseOptions(argv: string[]): Options {
     options: {
       'skip-build': { type: 'boolean', default: false },
       'skip-deploy': { type: 'boolean', default: false },
-      'skip-rebuild': { type: 'boolean', default: false },
+      'skip-native-check': { type: 'boolean', default: false },
     },
   })
   return {
     skipBuild: values['skip-build'],
     skipDeploy: values['skip-deploy'],
-    skipRebuild: values['skip-rebuild'],
+    skipNativeCheck: values['skip-native-check'],
   }
 }
 
@@ -102,19 +107,6 @@ async function runPnpm(label: string, args: string[]): Promise<void> {
       else reject(new Error(`prepare-backend: ${label} failed (${code === null ? `signal ${String(signal)}` : `exit code ${String(code)}`}): ${printable}`))
     })
   })
-}
-
-/**
- * Read the Electron version the shell is pinned to.
- * @returns the exact version string from the installed electron package.
- */
-async function electronVersion(): Promise<string> {
-  const manifestPath = join(desktopRoot, 'node_modules', 'electron', 'package.json')
-  if (!existsSync(manifestPath)) {
-    throw new Error(`prepare-backend: ${manifestPath} is missing; run pnpm install first.`)
-  }
-  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as { version: string }
-  return manifest.version
 }
 
 /** Build the workspace artifacts the staged closure copies. */
@@ -336,34 +328,60 @@ async function restoreExecutables(): Promise<void> {
 }
 
 /**
- * Rebuild the native addons against the Electron ABI. The backend runs inside
- * Electron's Node, so an addon compiled for a standalone Node release loads
- * with a module-version error.
+ * Prove every staged native addon loads under the runtime that will actually
+ * import it: the Node inside Electron, reached through `ELECTRON_RUN_AS_NODE`.
+ *
+ * This is the requirement an ABI rebuild exists to satisfy, tested directly. A
+ * failure here means the prebuilds genuinely do not match, and the message says
+ * what to run; it does not mean the machine is missing a compiler.
  * @param options - the resolved script options.
  */
-async function rebuildNative(options: Options): Promise<void> {
-  if (options.skipRebuild) {
-    console.log('prepare-backend: skipping native rebuild (--skip-rebuild)')
+async function verifyNativeAddons(options: Options): Promise<void> {
+  if (options.skipNativeCheck) {
+    console.log('prepare-backend: skipping the native addon check (--skip-native-check)')
     return
   }
   const present = NATIVE_MODULES.filter(name => existsSync(join(STAGING, 'node_modules', name)))
   if (present.length === 0) {
-    console.log('prepare-backend: no native modules staged; nothing to rebuild')
+    console.log('prepare-backend: no native addons staged; nothing to check')
     return
   }
-  await runPnpm('electron-rebuild', [
-    '--filter',
-    '@deepseek-ai/dsh-desktop',
-    'exec',
-    'electron-rebuild',
-    '--version',
-    await electronVersion(),
-    '--module-dir',
-    STAGING,
-    '--only',
-    present.join(','),
-    '--force',
-  ])
+  const electron = await electronBinary()
+  const probe = present.map(name => `require(${JSON.stringify(name)})`).join(';')
+  await new Promise<void>((settle, reject) => {
+    const child = spawn(electron, ['-e', probe], {
+      cwd: STAGING,
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      stdio: ['ignore', 'inherit', 'inherit'],
+    })
+    child.once('error', error => void reject(new Error(`prepare-backend: native addon check failed to spawn: ${error.message}`)))
+    child.once('exit', (code) => {
+      if (code === 0) {
+        console.log(`prepare-backend: native addons load under Electron's Node: ${present.join(', ')}`)
+        settle()
+        return
+      }
+      reject(new Error(
+        `prepare-backend: ${present.join(', ')} did not load under Electron's Node (exit code ${String(code)}).\n`
+        + 'Rebuild them for this ABI with: pnpm --filter @deepseek-ai/dsh-desktop exec electron-rebuild '
+        + `--version ${String(process.env.npm_package_version ?? '')} --module-dir ${STAGING} --only ${present.join(',')} --force`,
+      ))
+    })
+  })
+}
+
+/**
+ * Locate the Electron executable this package is pinned to.
+ * @returns the absolute path of the Electron binary.
+ */
+async function electronBinary(): Promise<string> {
+  const packageDir = join(desktopRoot, 'node_modules', 'electron')
+  const relative = (await readFile(join(packageDir, 'path.txt'), 'utf8')).trim()
+  const binary = join(packageDir, 'dist', relative)
+  if (!existsSync(binary)) {
+    throw new Error(`prepare-backend: ${binary} is missing; run pnpm install so Electron downloads its binary.`)
+  }
+  return binary
 }
 
 /** Print what was staged so a failed installer build is diagnosable from the log. */
@@ -390,5 +408,5 @@ try {
 }
 await repairClosure()
 await restoreExecutables()
-await rebuildNative(options)
+await verifyNativeAddons(options)
 await report()

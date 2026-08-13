@@ -6,6 +6,7 @@
   "type": "module",
   "main": "lib/main.js",
   "license": "MIT",
+  "author": "cloud-1104",
   "scripts": {
     "build": "tsc -b && tsdown",
     "typecheck": "tsc -b",
@@ -19,7 +20,6 @@
     "electron-updater": "^6.6.2"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.1",
     "@types/node": "^22.20.0",
     "electron": "^43.4.0",
     "electron-builder": "^26.15.7",

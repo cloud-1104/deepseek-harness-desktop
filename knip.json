@@ -729,6 +729,7 @@
     "apps/desktop": {
       "entry": [
         "src/main.ts",
+        "src/preload.ts",
         "scripts/prepare-backend.ts",
         "tests/**/*.spec.ts"
       ],
@@ -736,9 +737,6 @@
         "src/**/*.ts",
         "scripts/**/*.ts",
         "tests/**/*.ts"
-      ],
-      "ignoreDependencies": [
-        "@electron/rebuild"
       ]
     },
     "apps/cli": {

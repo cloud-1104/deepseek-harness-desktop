@@ -27,6 +27,9 @@ linkWorkspacePackages: true
 overrides:
   '@deepseek-ai/cosmokit': 'link:vendor/cosmokit'
   '@deepseek-ai/schemastery': 'link:vendor/schemastery'
+  # app-builder-lib asks for ^3.0.0 but reads ElectronDownloadCacheMode, which
+  # 3.1.0 introduced; resolving the floor crashes packaging on an undefined enum.
+  '@electron/get': '^3.1.0'
 
 peerDependencyRules:
   allowedVersions:

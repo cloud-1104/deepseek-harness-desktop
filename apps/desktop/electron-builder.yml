@@ -16,9 +16,12 @@ files:
 # The harness backend ships beside the asar, never inside it: profile boot links
 # into these package directories and reads bundle patch files off disk, and
 # neither works through an archive. scripts/prepare-backend.ts produces the tree.
+# The backend arrives through afterPack, not here: electron-builder's directory
+# copy drops node_modules, which is the whole runtime. scripts/after-pack.cjs
+# owns that copy and fails the build when nothing is staged.
+afterPack: scripts/after-pack.cjs
+
 extraResources:
-  - from: backend-dist
-    to: backend
   # The backend reads this as an ordinary file, so it stays out of the archive.
   - from: assets/desktop.patch.yml
     to: desktop.patch.yml
