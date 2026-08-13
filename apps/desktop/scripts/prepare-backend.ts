@@ -371,17 +371,47 @@ async function verifyNativeAddons(options: Options): Promise<void> {
 }
 
 /**
- * Locate the Electron executable this package is pinned to.
+ * Locate the Electron executable this package is pinned to, downloading it
+ * first when it is absent.
+ *
+ * pnpm strips the `scripts` field from a package whose build was not approved
+ * when it entered the content-addressable store, and approving it afterwards
+ * does not restore them — the store copy is reused as-is. Electron's postinstall
+ * therefore never runs, on any machine, and the binary it fetches is missing.
+ * Running that same script here keeps the check working without depending on
+ * whether the store copy happens to carry it.
  * @returns the absolute path of the Electron binary.
  */
 async function electronBinary(): Promise<string> {
   const packageDir = join(desktopRoot, 'node_modules', 'electron')
-  const relative = (await readFile(join(packageDir, 'path.txt'), 'utf8')).trim()
-  const binary = join(packageDir, 'dist', relative)
+  const marker = join(packageDir, 'path.txt')
+  if (!existsSync(marker)) {
+    console.log('prepare-backend: Electron binary absent; running its install script')
+    await runNode('electron install', join(packageDir, 'install.js'), packageDir)
+  }
+  const binary = join(packageDir, 'dist', (await readFile(marker, 'utf8')).trim())
   if (!existsSync(binary)) {
-    throw new Error(`prepare-backend: ${binary} is missing; run pnpm install so Electron downloads its binary.`)
+    throw new Error(`prepare-backend: ${binary} is missing after Electron's install script ran.`)
   }
   return binary
+}
+
+/**
+ * Run a Node script with inherited stdio, failing loud on a non-zero exit.
+ * @param label - step name used in log and error lines.
+ * @param script - absolute path of the script to run.
+ * @param cwd - working directory for the child.
+ */
+async function runNode(label: string, script: string, cwd: string): Promise<void> {
+  console.log(`prepare-backend: ${label}: node ${script}`)
+  await new Promise<void>((settle, reject) => {
+    const child = spawn(process.execPath, [script], { cwd, stdio: 'inherit' })
+    child.once('error', (error) => { reject(new Error(`prepare-backend: ${label} failed to spawn: ${error.message}`)) })
+    child.once('exit', (code) => {
+      if (code === 0) settle()
+      else reject(new Error(`prepare-backend: ${label} failed (exit code ${String(code)})`))
+    })
+  })
 }
 
 /** Print what was staged so a failed installer build is diagnosable from the log. */
