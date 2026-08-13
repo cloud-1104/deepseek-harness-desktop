@@ -50,6 +50,12 @@ allowBuilds:
   node-addon-require-builtin: false
   # JSONL durability calls MoveFileExW with write-through publication on Windows.
   koffi: true
+  # The desktop shell's runtime: the postinstall fetches the prebuilt Electron
+  # binary that apps/desktop is both developed against and packaged around.
+  electron: true
+  # electron-builder pulls this in for the Squirrel.Windows target. apps/desktop
+  # ships NSIS instead, so nothing needs the script it installs.
+  electron-winstaller: false
   # The Python runtime deploy includes the reviewed workspace postinstall that
   # restores the executable bit on node-pty's macOS spawn helper.
   '@deepseek-ai/dsh-subprocess-local@file:packages/subprocess/subprocess-local': true

@@ -5,10 +5,13 @@
  * (CREATE_NO_WINDOW / CREATE_NEW_CONSOLE) is intentionally absent: under this
  * restriction scheme hidden-console children die with STATUS_DLL_INIT_FAILED
  * (0xC0000142) — verified empirically, see win32-abi.ts. Stdio redirection is
- * pipe-based and unaffected; the child shares the host console.
+ * pipe-based and unaffected; the child shares the host console. When that
+ * console is one this process had to allocate for itself, the child is started
+ * with the hidden show state so attaching to it does not raise its window.
  * @module @deepseek-ai/dsh-sandbox-windows-acl/spawn
  */
 
+import { hostConsoleIsHidden } from './console.ts'
 import { allocPtrSlot, allocProcessInfo, allocStartupInfo, allocUint32, decodePtr, decodeProcessInfo, decodeUint32, encodeStartupInfo, isNullPtr, throwLastError, throwWin32 } from './ffi.ts'
 import type { NativePtr, Win32Bindings } from './ffi.ts'
 import * as abi from './win32-abi.ts'
@@ -110,10 +113,14 @@ export function spawnSandboxed(
   setInheritable(api, stdOut.write, 'stdout write end')
   setInheritable(api, stdErr.write, 'stderr write end')
 
+  // A child attaching to a shared console re-shows its window unless it asks
+  // for the hidden state; only a console this process created may be kept down.
+  const hidden = hostConsoleIsHidden(api)
   const startupInfo = allocStartupInfo()
   encodeStartupInfo(startupInfo, {
     cb: abi.STARTUPINFOW_SIZE,
-    dwFlags: abi.STARTF_USESTDHANDLES,
+    dwFlags: abi.STARTF_USESTDHANDLES | (hidden ? abi.STARTF_USESHOWWINDOW : 0),
+    wShowWindow: hidden ? abi.SW_HIDE : 0,
     hStdInput: stdIn.read,
     hStdOutput: stdOut.write,
     hStdError: stdErr.write,
@@ -294,10 +301,14 @@ export function spawnSandboxedInherited(
   makeInheritable(stdOut, 'stdout')
   makeInheritable(stdErr, 'stderr')
 
+  // Same reason as the piped spawn: a shared console must not be raised by
+  // the child attaching to it.
+  const hidden = hostConsoleIsHidden(api)
   const startupInfo = allocStartupInfo()
   encodeStartupInfo(startupInfo, {
     cb: abi.STARTUPINFOW_SIZE,
-    dwFlags: abi.STARTF_USESTDHANDLES,
+    dwFlags: abi.STARTF_USESTDHANDLES | (hidden ? abi.STARTF_USESHOWWINDOW : 0),
+    wShowWindow: hidden ? abi.SW_HIDE : 0,
     hStdInput: stdIn,
     hStdOutput: stdOut,
     hStdError: stdErr,

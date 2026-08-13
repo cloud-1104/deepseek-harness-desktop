@@ -358,6 +358,12 @@ export function spawnSubprocess(spec: SubprocessSpawnSpec, internals: SpawnInter
     // `detached` gives teardown a tree root on POSIX (its own process group);
     // Windows terminates by root pid through taskkill /T instead.
     detached: platform !== 'win32',
+    // Windows: CREATE_NO_WINDOW. Every stream here is a pipe or an inherited
+    // handle, so no child needs a console window — and a GUI host would
+    // otherwise flash one per command. The child still receives a console,
+    // just a windowless one, which is what the ACL sandbox's confined
+    // grandchildren attach to instead of building their own.
+    windowsHide: true,
   })
 
   const collectStream = (mode: SubprocessOutputMode, stream: Readable | null, label: string): OutputCollector | undefined => {

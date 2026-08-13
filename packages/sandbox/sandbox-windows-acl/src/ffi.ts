@@ -43,6 +43,8 @@ type Ptr = ReturnType<typeof koffi.pointer>
 export interface StartupInfoInput {
   cb: number
   dwFlags: number
+  /** Show state honored only when dwFlags carries STARTF_USESHOWWINDOW. */
+  wShowWindow: number
   hStdInput: NativePtr
   hStdOutput: NativePtr
   hStdError: NativePtr
@@ -133,6 +135,20 @@ export interface Win32Bindings {
   // runner can clean up grants after the child exits.
   setConsoleCtrlHandler(handler: null, add: number): number
   getStdHandle(stdHandle: number): NativePtr
+  /**
+   * The console input code page, or 0 when this process owns no console. This
+   * is the attachment test: `GetConsoleWindow` returns NULL for a ConPTY
+   * console, which has no window but is very much attached.
+   */
+  getConsoleCP(): number
+  /** The console window of this process; NULL for a ConPTY console or none at all. */
+  getConsoleWindow(): NativePtr | null
+  /** Attach a new console to this process; fails when it already has one. */
+  allocConsole(): number
+  /** Show or hide a window; used only to hide a console this process had to allocate. */
+  showWindow(window: NativePtr, command: number): number
+  /** Whether a window is currently visible; the test for a console this process hid. */
+  isWindowVisible(window: NativePtr): number
 }
 
 const PVOID: Ptr = koffi.pointer('void')
@@ -374,6 +390,7 @@ function bindings(): Win32Bindings {
   if (cached !== undefined) return cached
   const kernel32 = koffi.load('kernel32.dll')
   const advapi32 = koffi.load('advapi32.dll')
+  const user32 = koffi.load('user32.dll')
 
   // Each binding shape is verified by verify/abi-probe.cpp against the real
   // Windows headers and exercised end-to-end by tests/probe.spec.ts; the
@@ -427,6 +444,13 @@ function bindings(): Win32Bindings {
     terminateProcess: bind(kernel32, 'TerminateProcess', 'int', [PVOID, 'uint32']),
     setConsoleCtrlHandler: bind(kernel32, 'SetConsoleCtrlHandler', 'int', [PVOID, 'int']),
     getStdHandle: bind(kernel32, 'GetStdHandle', PVOID, ['int']),
+    // consoleapi.h / wincon.h: whether this process owns the console every
+    // confined child shares, and the means to give it one that stays hidden.
+    getConsoleCP: bind(kernel32, 'GetConsoleCP', 'uint32', []),
+    getConsoleWindow: bind(kernel32, 'GetConsoleWindow', PVOID, []),
+    allocConsole: bind(kernel32, 'AllocConsole', 'int', []),
+    showWindow: bind(user32, 'ShowWindow', 'int', [PVOID, 'int']),
+    isWindowVisible: bind(user32, 'IsWindowVisible', 'int', [PVOID]),
   } as unknown as Win32Bindings
   return cached
 }

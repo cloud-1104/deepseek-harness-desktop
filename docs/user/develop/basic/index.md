@@ -2,7 +2,7 @@
 
 English | [中文](index.zh.md)
 
-This tutorial creates a minimal Harness plugin and loads it into the Web UI. Start from a repository checkout that has completed the [run-from-source path](../../../../README.md#run-from-source).
+This tutorial creates a minimal Harness plugin and loads it into the Web UI. Start from a repository checkout that has completed the [run-from-source path](../../../../README.md).
 
 ## Create a local project
 
@@ -139,6 +139,6 @@ Function form is sufficient in most cases. Use class form when the plugin provid
 
 ## Next steps
 
-- [Build a tool](./tool.md) — learn the tool definition DSL
-- [Plugin configuration](./config.md) — accept user configuration
-- [Cordis tutorial](../../../cordis-tutorial/index.md) — the plugin framework underneath, built from a scratch directory with no API key
+- [Build a tool](./tool.md) �?learn the tool definition DSL
+- [Plugin configuration](./config.md) �?accept user configuration
+- [Cordis tutorial](../../../cordis-tutorial/index.md) �?the plugin framework underneath, built from a scratch directory with no API key

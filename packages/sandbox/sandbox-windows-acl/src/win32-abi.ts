@@ -139,6 +139,12 @@ export const SUB_CONTAINERS_AND_OBJECTS_INHERIT = 0x3 // == OBJECT_INHERIT_ACE |
  * handles, required because Node clears stdio inheritability at startup.
  */
 export const STARTF_USESTDHANDLES = 0x00000100
+/**
+ * STARTF_USESHOWWINDOW: STARTUPINFOW dwFlags — wShowWindow carries the show
+ * state. Set only when this process allocated its own hidden console, so a
+ * child attaching to it cannot bring that window back up.
+ */
+export const STARTF_USESHOWWINDOW = 0x00000001
 /** HANDLE_FLAG_INHERIT: SetHandleInformation flag re-enabling handle inheritance for the spawned child's stdio handles. */
 export const HANDLE_FLAG_INHERIT = 0x1
 /** INFINITE: never-timeout wait value. */
@@ -149,6 +155,19 @@ export const MAX_PATH = 260
 // assign it to the kill-on-close job before any of its code runs.
 /** CREATE_SUSPENDED: create the child with its primary thread suspended until ResumeThread. */
 export const CREATE_SUSPENDED = 0x4
+// winuser.h line ~1932: ShowWindow's nCmdShow for the console this process
+// allocates when it has none — the window is never meant to be seen.
+/** SW_HIDE: hide the window and activate another. */
+export const SW_HIDE = 0
+/** ERROR_ACCESS_DENIED: AllocConsole's code for a process that already has a console. */
+export const ERROR_ACCESS_DENIED = 5
+/**
+ * DETACHED_PROCESS: the child gets no console at all — it neither inherits the
+ * caller's nor builds its own (winbase.h line ~403). Unlike CREATE_NO_WINDOW,
+ * which still has the restricted token build a windowless console and die at
+ * DLL init, nothing is constructed here.
+ */
+export const DETACHED_PROCESS = 0x00000008
 // winbase.h lines ~497-499: GetStdHandle selectors.
 /** STD_INPUT_HANDLE: GetStdHandle selector for the standard input. */
 export const STD_INPUT_HANDLE = -10

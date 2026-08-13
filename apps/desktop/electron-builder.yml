@@ -1,0 +1,57 @@
+appId: com.deepseek.harness.desktop
+productName: DeepSeek Harness Desktop
+copyright: Copyright (c) DeepSeek
+
+directories:
+  output: release
+  buildResources: build
+
+# The shell's own code only. electron-builder resolves the production
+# dependency tree separately, so electron-updater arrives without being listed.
+files:
+  - lib/**/*
+  - assets/**/*
+  - package.json
+
+# The harness backend ships beside the asar, never inside it: profile boot links
+# into these package directories and reads bundle patch files off disk, and
+# neither works through an archive. scripts/prepare-backend.ts produces the tree.
+extraResources:
+  - from: backend-dist
+    to: backend
+  # The backend reads this as an ordinary file, so it stays out of the archive.
+  - from: assets/desktop.patch.yml
+    to: desktop.patch.yml
+
+asar: true
+
+# The staged backend is rebuilt for the Electron ABI by prepare-backend.ts.
+# Letting electron-builder rebuild again would run against a different module
+# root and silently undo that work.
+npmRebuild: false
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  # Signing stays unconfigured until a Developer ID certificate exists. CI sets
+  # CSC_IDENTITY_AUTO_DISCOVERY=false so a build never picks up a stray keychain
+  # identity; adding `notarize` here is the only change signing needs.
+  hardenedRuntime: false
+
+publish:
+  provider: github
+  owner: deepseek-ai
+  repo: deepseek-harness-desktop

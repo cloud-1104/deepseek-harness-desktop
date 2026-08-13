@@ -35,6 +35,8 @@ function pipeFailureApi(): { api: Win32Bindings; closed: bigint[]; closeHandle: 
     getLastError: vi.fn(() => 5), // ERROR_ACCESS_DENIED: the failure the branch reports
     closeHandle,
     formatMessageW: vi.fn(() => 0),
+    // No console window: the spawn keeps the default show state.
+    getConsoleWindow: vi.fn(() => 0n),
   } as unknown as Win32Bindings
   return { api, closed, closeHandle }
 }
@@ -64,6 +66,8 @@ function resumeFailureApi(): { api: Win32Bindings; closed: bigint[]; closeHandle
     getLastError: vi.fn(() => 5),
     closeHandle,
     formatMessageW: vi.fn(() => 0),
+    // No console window: the spawn keeps the default show state.
+    getConsoleWindow: vi.fn(() => 0n),
   } as unknown as Win32Bindings
   return { api, closed, closeHandle }
 }
@@ -168,6 +172,8 @@ function pipeOkApi(overrides: Partial<Win32Bindings> = {}): {
     closeHandle,
     formatMessageW: vi.fn(() => 0),
     ...overrides,
+    // No console window: the spawn keeps the default show state.
+    getConsoleWindow: vi.fn(() => 0n),
   } as unknown as Win32Bindings
   return { api, closed, closeHandle }
 }
@@ -259,6 +265,8 @@ describe('spawnSandboxedInherited failure paths', () => {
       closeHandle,
       formatMessageW: vi.fn(() => 0),
       ...overrides,
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     return { api, closed, closeHandle }
   }
@@ -362,6 +370,8 @@ describe('drainPipe', () => {
       getLastError: vi.fn(() => abi.ERROR_NO_DATA),
       closeHandle,
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     return drainPipe(api, 30n as NativePtr).then((buffer) => {
       expect(buffer.length).toBe(0)
@@ -375,6 +385,8 @@ describe('drainPipe', () => {
       getLastError: vi.fn(() => 5),
       closeHandle: vi.fn(() => 1),
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     return expect(drainPipe(api, 30n as NativePtr)).rejects.toMatchObject({ api: 'PeekNamedPipe' })
   })
@@ -389,6 +401,8 @@ describe('drainPipe', () => {
       getLastError: vi.fn(() => 5),
       closeHandle: vi.fn(() => 1),
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     return expect(drainPipe(api, 30n as NativePtr)).rejects.toMatchObject({ api: 'ReadFile' })
   })
@@ -410,6 +424,8 @@ describe('drainPipe', () => {
       getLastError: vi.fn(() => abi.ERROR_BROKEN_PIPE),
       closeHandle: vi.fn(() => 1),
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     return drainPipe(api, 30n as NativePtr).then((buffer) => {
       expect(buffer.toString('utf8')).toBe('ab')
@@ -423,6 +439,8 @@ describe('waitForExit', () => {
       waitForSingleObject: vi.fn(() => 0xFFFFFFFF),
       getLastError: vi.fn(() => 5),
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     expect(() => waitForExit(api, 200n as NativePtr)).toThrow(Win32Error)
   })
@@ -433,6 +451,8 @@ describe('waitForExit', () => {
       getExitCodeProcess: vi.fn(() => 0),
       getLastError: vi.fn(() => 5),
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     expect(() => waitForExit(api, 200n as NativePtr)).toThrow(Win32Error)
   })
@@ -447,6 +467,8 @@ describe('waitForExit', () => {
       }),
       closeHandle,
       formatMessageW: vi.fn(() => 0),
+      // No console window: the spawn keeps the default show state.
+      getConsoleWindow: vi.fn(() => 0n),
     } as unknown as Win32Bindings
     expect(waitForExit(api, 200n as NativePtr)).toBe(42)
     expect(closeHandle).toHaveBeenCalledWith(200n)

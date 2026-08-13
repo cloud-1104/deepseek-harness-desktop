@@ -726,6 +726,21 @@
         "react-dom"
       ]
     },
+    "apps/desktop": {
+      "entry": [
+        "src/main.ts",
+        "scripts/prepare-backend.ts",
+        "tests/**/*.spec.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "scripts/**/*.ts",
+        "tests/**/*.ts"
+      ],
+      "ignoreDependencies": [
+        "@electron/rebuild"
+      ]
+    },
     "apps/cli": {
       "entry": [
         "tests/**/*.spec.ts",

@@ -151,6 +151,11 @@ function happyStubs(): HappyStubs {
   const closeHandle = vi.fn(() => 1)
   const getLastError = vi.fn(() => abi.ERROR_BROKEN_PIPE) // the drains' clean EOF
   const formatMessageW = vi.fn(() => 0)
+  // init() provisions the console confined children share; a stub host already has one.
+  const getConsoleCP = vi.fn(() => 65001)
+  const allocConsole = vi.fn(() => 1)
+  const getConsoleWindow = vi.fn(() => 0n)
+  const showWindow = vi.fn(() => 1)
 
   const api = {
     openProcess, openProcessToken, convertStringSidToSidW, getTempPathW, createFileW,
@@ -161,6 +166,7 @@ function happyStubs(): HappyStubs {
     peekNamedPipe, readFile, waitForSingleObject, getExitCodeProcess, createJobObjectW,
     setInformationJobObject, assignProcessToJobObject, resumeThread, getStdHandle,
     localFree, closeHandle, getLastError, formatMessageW,
+    getConsoleCP, allocConsole, getConsoleWindow, showWindow,
   } as unknown as Win32Bindings
   return {
     api, setNamedSecurityInfoW, convertStringSidToSidW, closeHandle, localFree,

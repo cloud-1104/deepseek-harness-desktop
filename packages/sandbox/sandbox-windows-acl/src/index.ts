@@ -25,7 +25,8 @@
  *    (WRITE_RESTRICTED intersects only write accesses);
  *  - console isolation is unavailable — children share the host console
  *    (CREATE_NO_WINDOW / CREATE_NEW_CONSOLE children die with
- *    STATUS_DLL_INIT_FAILED under the restriction);
+ *    STATUS_DLL_INIT_FAILED under the restriction), so `init()` gives a
+ *    console-less host a hidden console of its own to share;
  *  - the private temp directory and every writable directory must be owned by the
  *    caller (owner-implicit WRITE_DAC);
  *  - grants are standing ACE mutations on real directories. WORKSPACE grants
@@ -44,6 +45,7 @@ import { existsSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { grantWrite, revokeWrite } from './acl.ts'
+import { ensureHostConsole } from './console.ts'
 import { Win32Error } from './errors.ts'
 import { allocPtrSlot, decodePtr, isNullPtr, throwLastError, win32 } from './ffi.ts'
 import type { NativePtr, Win32Bindings } from './ffi.ts'
@@ -222,6 +224,9 @@ export class AclSandbox {
   async init(): Promise<void> {
     if (this.api !== undefined) throw new Error('AclSandbox is already initialized')
     const api = await win32()
+    // Before the token exists: a confined child shares this process's console,
+    // and a host without one makes every console child abort at DLL init.
+    ensureHostConsole(api)
     const currentToken = openCurrentProcessToken(api)
     let currentTokenOpen = true
     let restrictedToken: NativePtr | undefined

@@ -276,22 +276,32 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
       // live on every long-lived surface. A silent skip would break the
       // documented hot-reload contract. HMR injects the timer service, which a
       // bare custom profile may not mount either.
-      if (ctx.get('hmr') === undefined) {
+      //
+      // HMR is unavailable outright on a runtime that withholds Node's ESM
+      // loader internals, which is how Electron's Node behaves. Reading the
+      // same fact the HMR constructor reads keeps that host booting without a
+      // live patch layer instead of failing, and says so rather than skipping
+      // quietly.
+      if (ctx.get('hmr') === undefined && ctx.loader.internal !== undefined) {
         if (ctx.get('timer') === undefined) {
           await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-timer' })
         }
         await ctx.loader.create({ name: '@deepseek-ai/cordis-plugin-hmr', config: { root: [] } })
       }
-      await watchUserPatches(ctx, {
-        binName: NAME,
-        filename: composed.profile.patchPath,
-        compose: composeLive,
-      })
-      await watchUserPatches(ctx, {
-        binName: NAME,
-        filename: homePatchPath(),
-        compose: composeLive,
-      })
+      if (ctx.get('hmr') === undefined) {
+        process.stderr.write(`${NAME}: this runtime withholds Node's module loader internals; cordis.patch.yml edits apply on the next launch.\n`)
+      } else {
+        await watchUserPatches(ctx, {
+          binName: NAME,
+          filename: composed.profile.patchPath,
+          compose: composeLive,
+        })
+        await watchUserPatches(ctx, {
+          binName: NAME,
+          filename: homePatchPath(),
+          compose: composeLive,
+        })
+      }
     } catch (error) {
       suppressShutdownError(ctx, signalShutdown.signal, error)
     }

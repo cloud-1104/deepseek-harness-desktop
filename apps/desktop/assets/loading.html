@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'" />
+    <title>DeepSeek Harness</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      /* The shell's injected title bar paints itself from these theme tokens,
+         which only the app defines; the startup page supplies its own. */
+      body {
+        --dsw-alias-bg-base: #16161a;
+        --dsw-alias-label-primary: #e8e8ec;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: #16161a;
+        color: #e8e8ec;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        user-select: none;
+        /* The window has no OS title bar, so the whole startup page moves it. */
+        -webkit-app-region: drag;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+        border: 2px solid #34343c;
+        border-top-color: #6b8afd;
+        border-radius: 50%;
+        animation: spin 900ms linear infinite;
+      }
+
+      .title {
+        font-size: 15px;
+        letter-spacing: 0.02em;
+      }
+
+      .hint {
+        font-size: 12.5px;
+        color: #8b8b96;
+        max-width: 30em;
+        line-height: 1.7;
+        text-align: center;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mark {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mark"></div>
+    <div class="title">正在启动 DeepSeek Harness</div>
+    <div class="hint">首次启动需要准备运行环境，可能需要一到两分钟。</div>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+{
+  // Own compiler face: the Electron typings pull in the DOM lib, which neither
+  // the Host nor the Client aggregate may see. Nothing here imports a workspace
+  // package, so the face needs no project references.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "lib/types",
+    "lib": [
+      "ES2024",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
+}

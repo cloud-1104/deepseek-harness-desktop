@@ -1,0 +1,19 @@
+# Desktop composition overlay, passed to the web profile as `--patch` by the
+# shell. It holds the composition choices that are true of the packaged desktop
+# app and of nothing else.
+
+# The adaptive chooser resolves `native` on Windows and macOS. Its Win32 half
+# drives an IFileOpenDialog through koffi in a child process, and that child
+# aborts with an N-API fatal error under the Node inside Electron. Pinning the
+# interaction by composing its pair directly is the documented alternative to
+# the chooser row (see the directory-picker-auto module contract); the in-app
+# browser serves every platform.
+- id: directory-picker
+  disabled: true
+
+- insert:
+    - id: directory-picker-browse
+      name: '@deepseek-ai/dsh-host-directory-picker-browse'
+
+    - id: directory-picker-browse-ui
+      name: '@deepseek-ai/dsh-client-ui-directory-picker-browse'

@@ -1,0 +1,79 @@
+name: Desktop release
+
+# Installer builds for the Electron shell. Native addons in the staged backend
+# are rebuilt against the Electron ABI on the platform they ship to, so every
+# target needs its own runner and no artifact is cross-built. See
+# apps/desktop/README.md.
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Upload the installers to the GitHub release for this ref.
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  # CI runs must never report to the production telemetry endpoint baked
+  # into apps/cli/cordis.yml (AppCLIEntry disables the row when set).
+  DSH_TELEMETRY_DISABLED: '1'
+  # A stray Developer ID in a runner keychain must never silently sign a build
+  # the release notes describe as unsigned.
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: windows-x64
+            runner: windows-2025
+            artifact: 'apps/desktop/release/*.exe'
+          - label: macos
+            runner: macos-15
+            artifact: 'apps/desktop/release/*.dmg'
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace artifacts
+        run: pnpm run build
+
+      - name: Stage the backend and rebuild native addons
+        run: pnpm --filter @deepseek-ai/dsh-desktop run prepare-backend --skip-build
+
+      - name: Build installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          pnpm --filter @deepseek-ai/dsh-desktop exec electron-builder
+          --publish ${{ (github.event_name == 'push' || inputs.publish) && 'always' || 'never' }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: desktop-${{ matrix.label }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+          retention-days: 7
