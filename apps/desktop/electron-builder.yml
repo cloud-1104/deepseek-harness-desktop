@@ -54,6 +54,11 @@ mac:
   # identity; adding `notarize` here is the only change signing needs.
   hardenedRuntime: false
 
+# The release page is read by people installing the app, not by people reading
+# the commit history, so it gets its own text rather than the tag's message.
+releaseInfo:
+  releaseNotesFile: build/release-notes.md
+
 publish:
   provider: github
   owner: cloud-1104

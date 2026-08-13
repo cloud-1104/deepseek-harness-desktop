@@ -5,23 +5,11 @@
 name: Landlock Run
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/landlock-run.yml'
-      - '.github/workflows/landlock-run-release.yml'
-      - 'native/landlock-run/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-  push:
-    branches: [master]
-    paths:
-      - '.github/workflows/landlock-run.yml'
-      - '.github/workflows/landlock-run-release.yml'
-      - 'native/landlock-run/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
 
 concurrency:

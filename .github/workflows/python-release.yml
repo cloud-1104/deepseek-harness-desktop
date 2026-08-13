@@ -5,15 +5,12 @@ name: Release (Python)
 # is accepted only from a manual run on the matching python-v* tag when the
 # private publisher-repository identity and public-PyPI switch are configured.
 on:
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish the validated wheels to public PyPI. Must run from a python-v* tag.
-        required: true
-        type: boolean
-        default: false
-  pull_request:
-    types: [labeled]
 
 permissions:
   contents: read

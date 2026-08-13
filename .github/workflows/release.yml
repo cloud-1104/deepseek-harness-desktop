@@ -8,16 +8,12 @@
 name: Release (dsh)
 
 on:
-  pull_request:
-  push:
-    branches: [master]
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish the packed tarballs to npm. Must run from a dsh-v* tag.
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   contents: read

@@ -3,18 +3,12 @@ name: E2E (pi-ai Azure OpenAI and Anthropic)
 # This suite spends tokens against two external providers and is intentionally
 # opt-in. It has no push, pull_request, schedule, or workflow_call trigger.
 on:
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
-    inputs:
-      azure_openai_model:
-        description: Azure OpenAI model from pi-ai's installed catalog
-        required: true
-        default: gpt-5.5
-        type: string
-      anthropic_model:
-        description: Anthropic model from pi-ai's installed catalog
-        required: true
-        default: claude-opus-4-8
-        type: string
 
 permissions:
   contents: read

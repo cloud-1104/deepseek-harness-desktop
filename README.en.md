@@ -10,6 +10,12 @@ DeepSeek Harness is a plugin-based agent runtime: the agent loop, shells and ter
 
 This project delivers it as a desktop application. The interface, the capabilities, and the data format match upstream; what disappears is the sequence of installing a Node toolchain, building, running a command, and opening a browser.
 
+![Start screen](apps/desktop/image/home.png)
+
+![Conversation](apps/desktop/image/conversation.png)
+
+![Settings](apps/desktop/image/settings.png)
+
 ## Install
 
 Download the installer for your platform from [Releases](https://github.com/cloud-1104/deepseek-harness-desktop/releases):

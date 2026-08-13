@@ -1,30 +1,12 @@
 name: Issue lifecycle
 
 on:
-  issues:
-    types:
-      - opened
-      - edited
-      - assigned
-      - unassigned
-      - labeled
-      - unlabeled
-      - closed
-      - reopened
-      - field_added
-      - field_removed
-  pull_request:
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
-      - labeled
-      - unlabeled
-      - review_requested
-  pull_request_review:
-    types:
-      - submitted
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
+  workflow_dispatch:
 
 permissions:
   contents: read

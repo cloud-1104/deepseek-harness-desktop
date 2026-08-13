@@ -8,35 +8,12 @@ name: Build single-exe
 # (remove and reapply to rerun), or call it from the Python release workflow.
 # Checkout uses the triggering ref, so dispatch needs no separate ref input.
 on:
-  workflow_call:
-    inputs:
-      targets:
-        description: Comma-separated pkg targets to build; empty builds all three.
-        type: string
-        required: false
-        default: ''
-      release:
-        description: Run as the native builder for the Python release workflow.
-        type: boolean
-        required: false
-        default: false
-      ci:
-        description: Run as the required Linux x64 Python runtime pull-request check.
-        type: boolean
-        required: false
-        default: false
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
-    inputs:
-      targets:
-        description: >-
-          Comma-separated pkg targets to build. Any subset of:
-          node24-linux-x64, node24-linux-arm64, node24-macos-arm64.
-          Empty builds all three.
-        type: string
-        required: false
-        default: ''
-  pull_request:
-    types: [labeled]
 
 concurrency:
   # Keep the called workflow distinct from its caller's concurrency group;

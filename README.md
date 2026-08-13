@@ -10,6 +10,12 @@ DeepSeek Harness 是一个插件化的 agent 运行时：完整的 agent 循环�
 
 本项目把它交付成桌面应用。界面、能力与数据格式与上游一致，去掉的只是安装 Node 工具链、构建、敲命令、再开浏览器这一串前置步骤。
 
+![起始界面](apps/desktop/image/home.png)
+
+![对话界面](apps/desktop/image/conversation.png)
+
+![设置界面](apps/desktop/image/settings.png)
+
 ## 安装
 
 从 [Releases](https://github.com/cloud-1104/deepseek-harness-desktop/releases) 下载对应平台的安装包：

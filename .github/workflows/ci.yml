@@ -1,32 +1,13 @@
 name: CI
 
 on:
-  push:
-    branches: [master]
-  pull_request:
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
-    inputs:
-      suite:
-        description: Manual CI suite to run
-        required: true
-        default: larger-runner-benchmark
-        type: choice
-        options:
-          - larger-runner-benchmark
-          - consolidated-runner-benchmark
 
-# Cancel a superseded run on every event EXCEPT push. A push run carries the two
-# self-hosted standby drills, which take longer than the interval between master
-# merges, so cancelling supersedes a drill before it reaches a verdict and the
-# lane yields no readiness evidence. Must be decided here: cancellation applies
-# to the whole superseded run, so a job-level group cannot exempt its job.
-# Negated rather than `== 'pull_request'` so workflow_dispatch keeps cancelling:
-# a re-dispatched runner benchmark holds up to 12 larger runners for 15 minutes
-# and shares this group with the drills on master, so queueing it would delay
-# them. The guarantee is narrow — evaluated against the newly triggered run, so a
-# dispatch on master still cancels a mid-flight drill, and a newer pending push
-# displaces an older one. Bounds and rationale:
-# .agents/notes/implemented/process/2026-07-26-ci-failover-runbook.md
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name != 'push' }}

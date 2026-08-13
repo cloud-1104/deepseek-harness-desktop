@@ -3,6 +3,11 @@ name: E2E (E2B sandbox)
 # This suite provisions external E2B sandboxes and is intentionally opt-in.
 # It has no push, pull_request, schedule, or workflow_call trigger.
 on:
+  # Upstream automation, kept for reference but never triggered here: it
+  # targets DeepSeek's enterprise and self-hosted runner pools and their
+  # secrets, neither of which exists in this fork. Runs would queue forever
+  # rather than fail. Manual dispatch stays available for anyone who wires
+  # up equivalent infrastructure.
   workflow_dispatch:
 
 permissions:
