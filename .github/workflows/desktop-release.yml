@@ -41,10 +41,8 @@ jobs:
         include:
           - label: windows-x64
             runner: windows-2025
-            artifact: 'apps/desktop/release/*.exe'
           - label: macos
             runner: macos-15
-            artifact: 'apps/desktop/release/*.dmg'
     steps:
       - uses: actions/checkout@v6
 
@@ -66,16 +64,48 @@ jobs:
 
       # `run dist`, not `exec electron-builder`: the script compiles the shell
       # first, and lib/ is generated, so a clean checkout has no entry file.
+      #
+      # Never publishes from here. Two matrix jobs each asking electron-builder
+      # to publish race on "does a release for this tag exist", and both lose:
+      # GitHub accepts several drafts for one tag, so the run ends with two
+      # half-filled releases. The publish job below makes exactly one.
       - name: Build installers
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          pnpm --filter @deepseek-ai/dsh-desktop run dist
-          --publish ${{ (github.event_name == 'push' || inputs.publish) && 'always' || 'never' }}
+        run: pnpm --filter @deepseek-ai/dsh-desktop run dist --publish never
 
       - uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ matrix.label }}
-          path: ${{ matrix.artifact }}
+          # The update metadata ships with the installers: electron-updater
+          # reads latest.yml and the block maps, not the installer alone.
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.exe.blockmap
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.dmg.blockmap
+            apps/desktop/release/latest*.yml
           if-no-files-found: error
           retention-days: 7
+
+  publish:
+    name: draft release
+    needs: build
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      # A draft, so the assets can be checked before anyone can download them.
+      - name: Draft one release for every platform
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release create "${{ github.ref_name }}" artifacts/*
+          --draft
+          --title "${{ github.ref_name }}"
+          --notes-file apps/desktop/build/release-notes.md
