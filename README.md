@@ -61,6 +61,7 @@ pnpm run desktop:dist
 - 尚未提供 Windows arm64 与 Linux 构建。
 - Windows 下的 shell 工具走 PowerShell，需要系统已安装 PowerShell。
 - 桌面版不支持 `cordis.patch.yml` 的热重载，配置改动在下次启动生效。
+- 后端子进程与主程序同名。正常关闭窗口不会有残留，但被强制结束（任务管理器、崩溃、或安装程序的「关闭应用」步骤）时它可能存活，使下次安装报「无法关闭进程」。执行 `taskkill /IM "DeepSeek Harness Desktop.exe" /F` 后重试即可。
 
 ## 致谢
 
