@@ -64,11 +64,13 @@ jobs:
       - name: Stage the backend and rebuild native addons
         run: pnpm --filter @deepseek-ai/dsh-desktop run prepare-backend --skip-build
 
+      # `run dist`, not `exec electron-builder`: the script compiles the shell
+      # first, and lib/ is generated, so a clean checkout has no entry file.
       - name: Build installers
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-
-          pnpm --filter @deepseek-ai/dsh-desktop exec electron-builder
+          pnpm --filter @deepseek-ai/dsh-desktop run dist
           --publish ${{ (github.event_name == 'push' || inputs.publish) && 'always' || 'never' }}
 
       - uses: actions/upload-artifact@v7

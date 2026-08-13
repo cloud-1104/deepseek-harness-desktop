@@ -13,8 +13,8 @@
     "dev": "npm run build && electron .",
     "icon": "electron scripts/generate-icon.mjs",
     "prepare-backend": "tsx scripts/prepare-backend.ts",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
   },
   "dependencies": {
     "electron-updater": "^6.6.2"
