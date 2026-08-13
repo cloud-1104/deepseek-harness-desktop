@@ -53,5 +53,5 @@ mac:
 
 publish:
   provider: github
-  owner: deepseek-ai
+  owner: cloud-1104
   repo: deepseek-harness-desktop

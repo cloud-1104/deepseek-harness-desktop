@@ -19,7 +19,7 @@ export const APP_ID = 'com.deepseek.harness.desktop'
  * The owner is this fork's, not the upstream harness repository's; it must
  * match `publish` in electron-builder.yml.
  */
-export const GITHUB_REPOSITORY = 'deepseek-ai/deepseek-harness-desktop'
+export const GITHUB_REPOSITORY = 'cloud-1104/deepseek-harness-desktop'
 
 /** Releases page offered when an update cannot be applied in place. */
 export const RELEASES_URL = `https://github.com/${GITHUB_REPOSITORY}/releases/latest`
